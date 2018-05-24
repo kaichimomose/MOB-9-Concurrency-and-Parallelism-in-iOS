@@ -26,7 +26,6 @@ protocol Cartable {
     associatedtype Item
     var items: [Item] {get set}
     var taxPercent: Int {get set}
-    var discountPercent: Int {get set}
     var couponCode: CouponCode {get set}
     
     func checkout()
@@ -34,7 +33,7 @@ protocol Cartable {
     func subTotal() -> Double
     // Total line items with tax minus discount
     func total() -> Double
-    func add(items: Item...)
+    mutating func add(items: Item...)
     func numberOfItems() -> Int
     func addCoupon(code: CouponCode) -> Bool
 }
@@ -84,7 +83,12 @@ struct Cart: Cartable {
     
     func total() -> Double {
         let subTotal = self.subTotal()
-        let discount = subTotal/Double(self.couponCode)
+        var discountPercent: Int
+        switch couponCode {
+        case .basic(let discount), .silver(let discount), .gold(let discount):
+            discountPercent = discount
+        }
+        let discount = subTotal*Double(discountPercent)
         return (subTotal - discount)*Double(taxPercent)
     }
     
@@ -99,7 +103,7 @@ struct Cart: Cartable {
     }
     
     func addCoupon(code: CouponCode) -> Bool {
-        
+        return true
     }
 }
 
@@ -109,7 +113,7 @@ struct Shop: ShopType {
     var cart: Cart
     
     func checkout() {
-        <#code#>
+        print("checkout")
     }
     
 }
