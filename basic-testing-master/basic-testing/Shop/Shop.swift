@@ -20,6 +20,7 @@ enum CouponCode {
     case basic(discount: Int)
     case silver(discount: Int)
     case gold(discount: Int)
+    case none
 }
 
 protocol Cartable {
@@ -35,7 +36,7 @@ protocol Cartable {
     func total() -> Double
     mutating func add(items: Item...)
     func numberOfItems() -> Int
-    func addCoupon(code: CouponCode) -> Bool
+    mutating func addCoupon(code: CouponCode) -> Bool
 }
 
 struct LineItem {
@@ -69,6 +70,11 @@ struct Cart: Cartable {
     var taxPercent: Int
     var couponCode: CouponCode
     
+//    init(taxPercent: Int, couponCode: CouponCode) {
+//        self.taxPercent = taxPercent
+//        self.couponCode = couponCode
+//    }
+    
     func checkout() {
         print("checkout")
     }
@@ -87,9 +93,10 @@ struct Cart: Cartable {
         switch couponCode {
         case .basic(let discount), .silver(let discount), .gold(let discount):
             discountPercent = discount
+        case .none:
+            discountPercent = 0
         }
-        let discount = subTotal*Double(discountPercent)
-        return (subTotal - discount)*Double(taxPercent)
+        return (subTotal*(1-Double(discountPercent)/100))*(1 + Double(taxPercent)/100)
     }
     
     mutating func add(items: LineItem...) {
@@ -102,7 +109,8 @@ struct Cart: Cartable {
         return self.items.count
     }
     
-    func addCoupon(code: CouponCode) -> Bool {
+    mutating func addCoupon(code: CouponCode) -> Bool {
+        self.couponCode = code
         return true
     }
 }
